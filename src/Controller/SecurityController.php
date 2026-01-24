@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -21,36 +21,38 @@ class SecurityController extends AbstractController
         private EntityManagerInterface $manager,
         private SerializerInterface $serializer,
         private UserPasswordHasherInterface $passwordHasher,
-    ) {
-    }
+    ) {}
 
     #[Route('/registration', name: 'registration', methods: 'POST')]
-    /** @OA\Post(
-     *     path="/api/registration",
-     *     summary="Inscription d'un nouvel utilisateur",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Données de l'utilisateur à inscrire",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="firstName", type="string", example="Thomas"),
-     *             @OA\Property(property="lastName", type="string", example="Dupont"),
-     *             @OA\Property(property="email", type="string", example="thomas@email.com"),
-     *             @OA\Property(property="password", type="string", example="Mot de passe")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Utilisateur inscrit avec succès",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="user", type="string", example="Nom d'utilisateur"),
-     *             @OA\Property(property="apiToken", type="string", example="31a023e212f116124a36af14ea0c1c3806eb9378"),
-     *             @OA\Property(property="roles", type="array", @OA\Items(type="string", example="ROLE_USER"))
-     *         )
-     *     )
-     * )
-     */
+    #[OA\Post(
+        path: '/api/registration',
+        summary: 'Inscription d\'un nouvel utilisateur',
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Données de l\'utilisateur à inscrire',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'firstName', type: 'string', example: 'Thomas'),
+                    new OA\Property(property: 'lastName', type: 'string', example: 'Dupont'),
+                    new OA\Property(property: 'email', type: 'string', example: 'thomas@email.com'),
+                    new OA\Property(property: 'password', type: 'string', example: 'Mot de passe')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Utilisateur inscrit avec succès',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'user', type: 'string', example: 'Nom d\'utilisateur'),
+                        new OA\Property(property: 'apiToken', type: 'string', example: '31a023e212f116124a36af14ea0c1c3806eb9378'),
+                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string', example: 'ROLE_USER'))
+                    ]
+                )
+            )
+        ]
+    )]
     public function register(Request $request): JsonResponse
     {
         $user = $this->serializer->deserialize($request->getContent(), User::class, 'json');
@@ -67,30 +69,30 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/login', name: 'login', methods: 'POST')]
-    /** @OA\Post(
-     *     path="/api/login",
-     *     summary="Connecter un utilisateur",
-     *     @OA\RequestBody(
-     *          @OA\MediaType(
-     *              mediaType="application/json",
-     *              @OA\Schema(
-     *                  type="object",
-     *                  required={"username", "password"},
-     *                  @OA\Property(property="username", type="string"),
-     *                  @OA\Property(property="password", type="string")
-     *              )
-     *          )
-     *      ),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Connexion réussie",
-     *          @OA\JsonContent(
-     *              type="object",
-     *              @OA\Property(property="X-AUTH-TOKEN", type="string")
-     *          )
-     *      )
-     * )
-     */
+    #[OA\Post(
+        path: '/api/login',
+        summary: 'Connecter un utilisateur',
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['username', 'password'],
+                properties: [
+                    new OA\Property(property: 'username', type: 'string'),
+                    new OA\Property(property: 'password', type: 'string')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Connexion réussie',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [new OA\Property(property: 'X-AUTH-TOKEN', type: 'string')]
+                )
+            )
+        ]
+    )]
     public function login(#[CurrentUser] ?User $user): JsonResponse
     {
         if (null === $user) {
@@ -105,15 +107,29 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/account/me', name: 'me', methods: 'GET')]
-    /** @OA\Get(
-     *     path="/api/account/me",
-     *     summary="Récupérer toutes les informations de l'objet User",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Tous les champs utilisateurs retournés",
-     *     )
-     * )
-     */
+    #[OA\Get(
+        path: '/api/account/me',
+        summary: 'Récupérer toutes les informations de l\'objet User',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Tous les champs utilisateurs retournés',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'firstName', type: 'string', example: 'Thomas'),
+                        new OA\Property(property: 'lastName', type: 'string', example: 'Dupont'),
+                        new OA\Property(property: 'email', type: 'string', example: 'thomas@email.com'),
+                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string', example: 'ROLE_USER')),
+                        new OA\Property(property: 'apiToken', type: 'string', example: '31a023e212f116124a36af14ea0c1c3806eb9378'),
+                        new OA\Property(property: 'createdAt', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'updatedAt', type: 'string', format: 'date-time', nullable: true)
+                    ]
+                )
+            )
+        ]
+    )]
     public function me(): JsonResponse
     {
         $user = $this->getUser();
@@ -124,23 +140,24 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/account/edit', name: 'edit', methods: 'PUT')]
-    /** @OA\Put(
-     *     path="/api/account/edit",
-     *     summary="Modifier son compte utilisateur avec l'un ou tous les champs",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Nouvelles données éventuelles de l'utilisateur à mettre à jour",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="firstName", type="string", example="Nouveau prénom"),
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Utilisateur modifié avec succès"
-     *     )
-     * )
-     */
+    #[OA\Put(
+        path: '/api/account/edit',
+        summary: 'Modifier son compte utilisateur avec l\'un ou tous les champs',
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Nouvelles données éventuelles de l\'utilisateur à mettre à jour',
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'firstName', type: 'string', example: 'Nouveau prénom'),
+                    new OA\Property(property: 'lastName', type: 'string', example: 'Nouveau nom'),
+                    new OA\Property(property: 'email', type: 'string', example: 'nouveau@mail.com'),
+                    new OA\Property(property: 'password', type: 'string', example: 'Nouveau mot de passe')
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 204, description: 'Utilisateur modifié avec succès')]
+    )]
     public function edit(Request $request): JsonResponse
     {
         $user = $this->serializer->deserialize(
